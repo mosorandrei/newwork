@@ -10,6 +10,7 @@ import com.newwork.core.service.impl.DefaultFeedbackService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -97,7 +98,7 @@ class DefaultFeedbackServiceTest {
     @Test
     void list_coworker_forbidden() {
         var p = principal(UUID.randomUUID(), Role.COWORKER, authorEmpId);
-        var ex = assertThrows(org.springframework.web.server.ResponseStatusException.class, () ->
+        var ex = assertThrows(ResponseStatusException.class, () ->
                 service.listForEmployee(empId, p));
         assertEquals(403, ex.getStatusCode().value());
     }
@@ -105,7 +106,7 @@ class DefaultFeedbackServiceTest {
     @Test
     void create_missing_text_bad_request() {
         var p = principal(UUID.randomUUID(), Role.COWORKER, authorEmpId);
-        var ex = assertThrows(org.springframework.web.server.ResponseStatusException.class, () ->
+        var ex = assertThrows(ResponseStatusException.class, () ->
                 service.createForEmployee(empId,
                         new com.newwork.core.web.dto.FeedbackDtos.CreateFeedbackReq("  "), p));
         assertEquals(400, ex.getStatusCode().value());
