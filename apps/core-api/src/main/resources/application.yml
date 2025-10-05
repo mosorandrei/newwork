@@ -26,3 +26,14 @@ logging:
 app:
   auth:
     hmacSecret: ${HMAC_SECRET:mocked_default_hmac_secret}
+  ai:
+    hf:
+      model: ${APP_AI_HF_MODEL:vennify/t5-base-grammar-correction}
+      token: ${HF_API_TOKEN:}
+      retry:
+        maxAttempts: 3
+        initialDelayMs: 200
+        multiplier: 2.0
+        maxDelayMs: 2000
+        jitterMs: 100
+        retryOnStatus: 408,429,500,502,503,504

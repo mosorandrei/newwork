@@ -2,9 +2,11 @@ package com.newwork.core.config;
 
 import com.newwork.core.domain.Employee;
 import com.newwork.core.domain.EmployeeProfile;
+import com.newwork.core.domain.Feedback;
 import com.newwork.core.domain.User;
 import com.newwork.core.repo.EmployeeProfileRepository;
 import com.newwork.core.repo.EmployeeRepository;
+import com.newwork.core.repo.FeedbackRepository;
 import com.newwork.core.repo.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -25,12 +27,16 @@ public class DataSeederRunner implements CommandLineRunner {
     private final UserRepository userRepository;
     private final EmployeeProfileRepository profileRepository;
 
+    private final FeedbackRepository feedbackRepository;
+
     public DataSeederRunner(EmployeeRepository employeeRepository,
                             UserRepository userRepository,
-                            EmployeeProfileRepository profileRepository) {
+                            EmployeeProfileRepository profileRepository,
+                            FeedbackRepository feedbackRepository) {
         this.employeeRepository = employeeRepository;
         this.userRepository = userRepository;
         this.profileRepository = profileRepository;
+        this.feedbackRepository = feedbackRepository;
     }
 
     @Override
@@ -126,6 +132,26 @@ public class DataSeederRunner implements CommandLineRunner {
             u.setRole(COWORKER);
             u.setEmployeeId(carol.getId());
             userRepository.save(u);
+        }
+
+        if (feedbackRepository.findByEmployeeIdOrderByCreatedAtDesc(bob.getId()).isEmpty()) {
+            var f1 = new Feedback();
+            f1.setEmployee(bob);
+            f1.setAuthorEmployeeId(carol.getId());   // Carol wrote it
+            f1.setTextOriginal("Pleasure to collaborate with Bob, he deliver fast.");
+            f1.setTextPolished("It’s a pleasure to collaborate with Bob—he delivers fast.");
+            f1.setPolishModel("seed");
+            feedbackRepository.save(f1);
+        }
+
+        if (feedbackRepository.findByEmployeeIdOrderByCreatedAtDesc(alice.getId()).isEmpty()) {
+            var f2 = new Feedback();
+            f2.setEmployee(alice);
+            f2.setAuthorEmployeeId(carol.getId());
+            f2.setTextOriginal("Alice provide clear direction to the team.");
+            f2.setTextPolished("Alice provides clear direction to the team.");
+            f2.setPolishModel("seed");
+            feedbackRepository.save(f2);
         }
     }
 }
