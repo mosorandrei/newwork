@@ -2,20 +2,25 @@ package com.newwork.core.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.newwork.core.domain.Employee;
+import com.newwork.core.security.JwtUtil;
 import com.newwork.core.service.EmployeeService;
 import com.newwork.core.web.support.Etags;
 import com.newwork.core.web.support.GlobalExceptionHandler;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,21 +31,27 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Controller tests for EmployeeController when a Service layer is used.
- * Security filters are disabled for clarity.
- */
-@WebMvcTest(controllers = EmployeeController.class)
+@WebMvcTest(
+        controllers = EmployeeController.class,
+        excludeAutoConfiguration = {
+                SecurityAutoConfiguration.class,
+                SecurityFilterAutoConfiguration.class,
+                OAuth2ClientAutoConfiguration.class,
+                OAuth2ResourceServerAutoConfiguration.class
+        }
+)
 @AutoConfigureMockMvc(addFilters = false)
 @Import({Etags.class, GlobalExceptionHandler.class})
+@TestPropertySource(properties = "app.security.enabled=false")
 class EmployeeControllerTest {
 
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper om;
 
     @MockBean EmployeeService employeeService;
+    @MockBean
+    JwtUtil jwtUtil;
 
-    // ---------- helpers ----------
     private static Employee emp(UUID id, String first, String last, Integer version) {
         Employee e = new Employee();
         e.setFirstName(first);
@@ -90,19 +101,15 @@ class EmployeeControllerTest {
 
         mvc.perform(post("/api/employees")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-              {"firstName":"Dana","lastName":"Pop"}
-            """))
+                        .content("{\"firstName\":\"Dana\",\"lastName\":\"Pop\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", endsWith("/api/employees/" + id)))
                 .andExpect(header().string("ETag", "\"0\""))
                 .andExpect(jsonPath("$.firstName").value("Dana"));
 
-        // verify we passed trimmed names to the service
         ArgumentCaptor<Employee> cap = ArgumentCaptor.forClass(Employee.class);
         verify(employeeService).save(cap.capture());
         Employee arg = cap.getValue();
-        // fields set, ID is null before persistence, which is fine
         assert arg.getFirstName().equals("Dana");
         assert arg.getLastName().equals("Pop");
     }
@@ -135,7 +142,6 @@ class EmployeeControllerTest {
     @Test
     void put_conflict_whenVersionMismatch_returns409() throws Exception {
         UUID id = UUID.randomUUID();
-        // current version is 2
         when(employeeService.findById(id)).thenReturn(Optional.of(emp(id, "X", "Y", 2)));
 
         mvc.perform(put("/api/employees/{id}", id)

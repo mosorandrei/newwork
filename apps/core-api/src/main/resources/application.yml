@@ -22,3 +22,7 @@ logging:
   level:
     org.hibernate.SQL: warn
     org.springframework.security: info
+
+app:
+  auth:
+    hmacSecret: ${HMAC_SECRET:mocked_default_hmac_secret}
