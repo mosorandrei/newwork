@@ -35,26 +35,23 @@ public class DefaultFeedbackService implements FeedbackService {
 
     @Override
     public List<FeedbackView> listForEmployee(UUID employeeId, UserPrincipal caller) {
-        if (caller == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-        boolean owner = Access.isOwner(caller, employeeId);
-        if (!(caller.role() == Role.MANAGER || owner)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-        var list = feedbackRepository.findByEmployeeIdOrderByCreatedAtDesc(employeeId);
-        return list.stream().map(this::toView).toList();
+        Access.requireAuth(caller);
+        boolean allowed = caller.role() == Role.MANAGER
+                || Access.isOwner(caller, employeeId);
+        if (!allowed) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+
+        return feedbackRepository.findByEmployeeIdOrderByCreatedAtDesc(employeeId)
+                .stream().map(this::toView).toList();
     }
 
     @Override
     public FeedbackView createForEmployee(UUID employeeId, CreateFeedbackReq req, UserPrincipal caller) {
-        if (caller == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-        if (!(caller.role() == Role.COWORKER || caller.role() == Role.MANAGER)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+        Access.requireAnyRole(caller, Role.COWORKER, Role.MANAGER);
 
         Employee target = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        String original = req.text() == null ? "" : req.text().trim();
+        String original = req == null || req.text() == null ? "" : req.text().trim();
         if (original.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "text_required");
 
         String polished = ai.polish(original);
@@ -66,8 +63,7 @@ public class DefaultFeedbackService implements FeedbackService {
         f.setTextPolished(polished);
         f.setPolishModel(ai.modelId());
 
-        var saved = feedbackRepository.save(f);
-        return toView(saved);
+        return toView(feedbackRepository.save(f));
     }
 
     private FeedbackView toView(Feedback f) {
