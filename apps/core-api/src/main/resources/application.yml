@@ -18,6 +18,14 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /docs
+    display-request-duration: true
+    try-it-out-enabled: true
+
 logging:
   level:
     org.hibernate.SQL: warn
