@@ -82,7 +82,7 @@ public class DefaultEmployeeProfileService implements EmployeeProfileService {
                 pr != null ? pr.getBio() : null,
                 pr != null ? pr.getSkillsJson() : null,
                 sensitive && pr != null ? pr.getSalary() : null,
-                sensitive ? masked : null,
+                masked,
                 sensitive && pr != null ? pr.getAddress() : null,
                 pr != null ? pr.getContactEmail() : null,
                 pr != null ? pr.getVersion() : 0
