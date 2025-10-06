@@ -1,0 +1,47 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/${POSTGRES_DB:newwork}}
+    username: ${SPRING_DATASOURCE_USERNAME:${POSTGRES_USER:newwork}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${POSTGRES_PASSWORD:newwork}}
+  jpa:
+    hibernate:
+      ddl-auto: update   # <-- Let Hibernate create/update the schema in dev
+    properties:
+      hibernate.jdbc.time_zone: UTC
+      hibernate.format_sql: true
+      hibernate.default_schema: public
+    open-in-view: false
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /docs
+    display-request-duration: true
+    try-it-out-enabled: true
+
+logging:
+  level:
+    org.hibernate.SQL: warn
+    org.springframework.security: info
+
+app:
+  auth:
+    hmacSecret: ${HMAC_SECRET:mocked_default_hmac_secret}
+  ai:
+    hf:
+      model: ${APP_AI_HF_MODEL:vennify/t5-base-grammar-correction}
+      token: ${HF_API_TOKEN:}
+      retry:
+        maxAttempts: 3
+        initialDelayMs: 200
+        multiplier: 2.0
+        maxDelayMs: 2000
+        jitterMs: 100
+        retryOnStatus: 408,429,500,502,503,504
