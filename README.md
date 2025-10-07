@@ -144,3 +144,41 @@ CORS is configured for `http://localhost:3000` (the SPA origin).
 - **Dev‑friendly defaults** – schema auto‑update, CORS for `http://localhost:3000`, seed data and demo users.
 
 > In short: small, composable classes, behavior close to the domain, and HTTP semantics that make the UI robust.
+
+## Improvements & Next Steps
+
+**1. Complete the Frontend Experience**
+
+Feature parity – Finalize missing UI flows (e.g., profile editing, absence approvals, AI feedback viewer).
+
+Enhanced UX – Introduce loading states, toasts, and optimistic UI for smoother interactions.
+
+API integration – Align all frontend calls with ETag/If-Match concurrency to reflect backend semantics.
+
+**2. Environment-Based Configuration**
+
+Introduce environment profiles (dev, qa, prod) across both the core-api and web apps.
+
+Parameterize endpoints, CORS origins, and HuggingFace tokens via .env files or Docker Compose overrides.
+
+Enable profile-specific logging levels, seed data toggles, and stricter security settings in production.
+
+**3. Cloud & Kubernetes Deployment**
+
+Container orchestration – Deploy services on Kubernetes (e.g., GKE, EKS, AKS) with Deployment, Service, and Ingress manifests.
+
+Centralized configuration – Move environment variables and secrets to ConfigMaps and Secrets for secure and consistent management.
+
+Observability – Add structured logging (JSON logs via Logback / Winston), metrics (Prometheus), and tracing (OpenTelemetry).
+
+Scalability – Enable horizontal pod autoscaling based on CPU/memory or request latency.
+
+Storage & persistence – Use managed Postgres (e.g., Cloud SQL or RDS) and persistent volumes for data durability.
+
+**4. Scalability & Reliability**
+
+Introduce asynchronous processing (e.g., message queues like RabbitMQ or Kafka) for heavy or retry-prone tasks such as AI feedback polishing.
+
+Implement API rate limiting and circuit breakers to protect the system under high load or external API failures.
+
+Add caching layers (Redis) for common queries and token validation.
